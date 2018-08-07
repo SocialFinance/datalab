@@ -157,6 +157,12 @@ def connection_flags(parser):
         action='store_true',
         default=False,
         help='do not open a browser connected to Datalab')
+    parser.add_argument(
+        '--internal-ip',
+        dest='internal_ip',
+        action='store_true',
+        default=False,
+        help='use internal ip address of the compute instance')
 
     return
 
@@ -197,6 +203,8 @@ def connect(args, gcloud_compute, email, in_cloud_shell):
         cmd = ['ssh']
         if args.zone:
             cmd.extend(['--zone', args.zone])
+        if args.internal_ip:
+            cmd.extend(['--internal-ip'])
         port_mapping = 'localhost:' + str(args.port) + ':localhost:8080'
         if os.name == 'posix':
             # The '-o' flag is not supported by all SSH clients (notably,
@@ -213,6 +221,7 @@ def connect(args, gcloud_compute, email, in_cloud_shell):
             '--ssh-flag=-N',
             '--ssh-flag=-L',
             '--ssh-flag=' + port_mapping])
+
         cmd.append('datalab@{0}'.format(instance))
         gcloud_compute(args, cmd)
         return
@@ -368,6 +377,7 @@ def run(args, gcloud_compute, email='', in_cloud_shell=False, **unused_kwargs):
     instance = args.instance
     status, metadata_items = utils.describe_instance(
         args, gcloud_compute, instance)
+
     for_user = metadata_items.get('for-user', '')
     sdk_version = metadata_items.get('created-with-sdk-version', 'UNKNOWN')
     datalab_version = metadata_items.get(
@@ -382,6 +392,7 @@ def run(args, gcloud_compute, email='', in_cloud_shell=False, **unused_kwargs):
               '\n\tCloud SDK: {}'
               '\n\tDatalab: {}'.format(
                   instance, sdk_version, datalab_version))
+
 
     maybe_start(args, gcloud_compute, instance, status)
     connect(args, gcloud_compute, email, in_cloud_shell)
