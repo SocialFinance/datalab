@@ -758,8 +758,12 @@ def prepare(args, gcloud_compute, gcloud_repos):
     """
     network_name = args.network_name
     ensure_network_exists(args, gcloud_compute, network_name)
-    prompt_on_unexpected_firewall_rules(args, gcloud_compute, network_name)
-    ensure_firewall_rule_exists(args, gcloud_compute, network_name)
+
+    # if the network name contains a forward slash this implies a shared VPC so do
+    # not create the firewall rules
+    if "/" not in network_name:
+        prompt_on_unexpected_firewall_rules(args, gcloud_compute, network_name)
+        ensure_firewall_rule_exists(args, gcloud_compute, network_name)
 
     disk_name = args.disk_name or '{0}-pd'.format(args.instance)
     ensure_disk_exists(args, gcloud_compute, disk_name)
